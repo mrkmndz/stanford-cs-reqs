@@ -1,0 +1,55 @@
+#dimg1 {
+    display: none !important;
+}
+
+.course.active {
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.bold-enabled .course.active {
+    font-weight: bold;
+}
+
+.underline-enabled .course.active {
+    border-bottom: 1px dotted green;
+}
+
+.c-title {
+    font-weight: bold;
+}
+
+.highlight-Aut .term-Aut, .control-Aut {
+    color: white;
+    background-color: brown;
+}
+
+.highlight-Win .term-Win, .control-Win {
+    color: white;
+    background-color: blue;
+}
+
+.highlight-Spr .term-Spr, .control-Spr {
+    color: white;
+    background-color: green;
+}
+
+.highlight-Aut.highlight-Win .term-Aut.term-Win {
+    background: linear-gradient(90deg, brown, blue);
+}
+
+.highlight-Aut.highlight-Spr .term-Aut.term-Spr {
+    background: linear-gradient(90deg, brown, green);
+}
+
+.highlight-Win.highlight-Spr .term-Win.term-Spr {
+    background: linear-gradient(90deg, blue, green);
+}
+
+.highlight-Aut.highlight-Win.highlight-Spr .term-Aut.term-Win.term-Spr {
+    background: linear-gradient(90deg, brown, blue, green);:w
+}
+
+* {
+    font-family: 'helvetica', arial, sans-serif !important;
+}
