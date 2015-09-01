@@ -18,7 +18,7 @@ var opts = nomnom
 })
 .parse();
 
-var URL_TO_SCRAPE = 'https://explorecourses.stanford.edu/print?filter-term-Autumn=on&filter-term-Summer=on&page=0&q=CS&filter-coursestatus-Active=on&descriptions=on&filter-term-Spring=on&filter-departmentcode-CS=on&filter-catalognumber-CS=on&collapse=&filter-term-Winter=on&academicYear=&catalog=';
+var URL_TO_SCRAPE = 'https://explorecourses.stanford.edu/print?q=CS&descriptions=on&filter-term-Winter=off&academicYear=&filter-term-Summer=off&filter-term-Autumn=off&filter-departmentcode-CS=on&filter-term-Spring=off&page=0&filter-coursestatus-Active=on&catalog=';
 
 gulp.task('clean-build', function(cb) {
     del(['build'], cb);
