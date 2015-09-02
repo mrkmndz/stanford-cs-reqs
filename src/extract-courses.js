@@ -80,7 +80,7 @@ var extractCoursesFromHtml = function(rawHtml) {
         course.title = $courseInfo.find('.courseTitle').first().text();
 
         $el.children('.courseAttributes').each(function() {
-            augmentCourseWithAttributes(course, $(this))
+            augmentCourseWithAttributes(course, $(this));
         });
         courses.push(course);
     });
@@ -107,7 +107,7 @@ var extractCoursesFromHtml = function(rawHtml) {
                 course[key] = value;
             }
         });
-    };
+    }
 };
 
 
@@ -119,7 +119,6 @@ var outputData = function(opts) {
         var jsonString = JSON.stringify(courses, null, 4) + '\n';
         stream.write(jsonString);
     };
-}
+};
 
 main();
-

@@ -1,5 +1,7 @@
 var courseInfo = require('../../build/courses.json');
 
+var subjects = ['CS', 'EE'];
+
 function main() {
     makeMenu();
     var expand = getParameterByName('expand') === 'true';
@@ -53,7 +55,7 @@ function main() {
             tooltip.setContent(content);
         }
     });
-};
+}
 
 function makeMenu() {
     var container = document.createElement('div');

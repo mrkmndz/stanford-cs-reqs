@@ -29,12 +29,12 @@ gulp.task('clean-dist', function(cb) {
 });
 
 gulp.task('build-dir', ['clean-build'], function(cb) {
-    mkdirp('build', cb)
-})
+    mkdirp('build', cb);
+});
 
 gulp.task('dist-dir', ['clean-dist'], function(cb) {
-    mkdirp('dist', cb)
-})
+    mkdirp('dist', cb);
+});
 
 var extractCommand = 'node src/extract-courses.js -o build/courses.json -u "' + URL_TO_SCRAPE + '"';
 if (opts['use-cached']) {
@@ -59,6 +59,7 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
                 decodeEntities: false
             });
             $('body').find('li').addBack().contents().each(function(i,elem){
+              console.log(i);
               console.log($(this).text());
             });
           }
@@ -77,7 +78,7 @@ gulp.task('css', function() {
     return gulp.src(['./src/vendor/**/*.css', './src/client/**/*.css'])
     .pipe(concat('styles.css'))
     .pipe(gulp.dest('./dist/'));
-})
+});
 
 gulp.task('js', ['inject-class-data'], function() {
     return gulp.src('./src/client/main.js')
@@ -105,7 +106,7 @@ gulp.task('generate-client', ['dist-dir', 'css', 'js', 'vendor-js'], function(cb
                 var body = $('body');
                 body.append('<script src="main.js" type="text/javascript"></script>');
                 fs.writeFile('./dist/index.html', $.html(), cb);
-            }
+            };
 
             var appendToHeadPath = './append-to-head.txt';
             fs.exists(appendToHeadPath, function(exists) {
@@ -116,7 +117,7 @@ gulp.task('generate-client', ['dist-dir', 'css', 'js', 'vendor-js'], function(cb
                         } else {
                             modifyHtmlAndWrite(appendData.toString());
                         }
-                    })
+                    });
                 } else {
                     modifyHtmlAndWrite();
                 }
