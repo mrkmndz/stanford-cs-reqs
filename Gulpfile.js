@@ -7,6 +7,9 @@ var gulp = require('gulp');
 var mkdirp = require('mkdirp');
 var nomnom = require('nomnom');
 var shell = require('gulp-shell');
+var request = require('request');
+var jsdom = require('jsdom').jsdom;
+var find = require('../findAndReplaceDOMText/src/findAndReplaceDOMText.js');
 
 var opts = nomnom
 .options({
@@ -51,17 +54,24 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
       cb(error);
     } else {
       var courses = JSON.parse(data);
-      fs.readFile('./data/specializations.html', function(error, data) {
+      request("https://web.stanford.edu/group/ughb/cgi-bin/handbook/index.php/Computer_Science_Program",
+      function(error, response, body) {
           if (error) {
               cb(error);
+          } else if (response.statusCode !== 200) {
+              cb(new Error('URL request gave a bad status code: ' + response.statusCode));
           } else {
-            var $ = cheerio.load(data.toString(), {
-                decodeEntities: false
+
+            var window = jsdom(body).defaultView;
+
+            wrapper = window.document.createElement('span');
+            wrapper.className = 'course';
+            find(window.document.body, {
+                find: /(CS ?)?\d\d*[a-zA-Z]?/g,
+                wrap: wrapper,
+                document: window.document
             });
-            $('body').find('li').addBack().contents().each(function(i,elem){
-              console.log(i);
-              console.log($(this).text());
-            });
+            console.log(window.document.documentElement.outerHTML);
           }
       });
     }
