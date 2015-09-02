@@ -13,13 +13,6 @@ function main() {
         classNumberToClass[number] = datum;
     });
 
-    wrapper = document.createElement('span');
-    wrapper.className = 'course';
-    findAndReplaceDOMText(document.body, {
-        find: /(CS ?)?\d\d*[a-zA-Z]?/g,
-        wrap: wrapper
-    });
-
     var courses = document.querySelectorAll('.course');
     Array.prototype.forEach.call(courses, function(courseEl) {
         var courseNumber = courseEl.innerText;

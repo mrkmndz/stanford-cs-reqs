@@ -71,7 +71,7 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
                 wrap: wrapper,
                 document: window.document
             });
-            console.log(window.document.documentElement.outerHTML);
+            fs.writeFile('./build/shoob.html', window.document.documentElement.outerHTML, cb);
           }
       });
     }
@@ -97,7 +97,7 @@ gulp.task('js', ['inject-class-data'], function() {
 });
 
 gulp.task('generate-client', ['dist-dir', 'css', 'js', 'vendor-js'], function(cb) {
-    fs.readFile('./data/specializations.html', function(error, data) {
+    fs.readFile('./build/shoob.html', function(error, data) {
         if (error) {
             cb(error);
         } else {
