@@ -20,9 +20,6 @@ var opts = nomnom
     }
 })
 .parse();
-
-var URL_TO_SCRAPE = 'https://explorecourses.stanford.edu/print?q=CS&descriptions=on&filter-term-Winter=off&academicYear=&filter-term-Summer=off&filter-term-Autumn=off&filter-departmentcode-CS=on&filter-term-Spring=off&page=0&filter-coursestatus-Active=on&catalog=';
-
 gulp.task('clean-build', function(cb) {
     del(['build'], cb);
 });
@@ -60,12 +57,12 @@ gulp.task('scrape-subjects',['build-dir'], function(cb){
                 }
               }
             });
-            fs.writeFile('./build/subjects', JSON.stringify(subjects), cb);
+            fs.writeFile('./build/subjects.json', JSON.stringify(subjects), cb);
       }
   });
 })
 
-var extractCommand = 'node src/extract-courses.js -o build/courses.json -u "' + URL_TO_SCRAPE + '"';
+var extractCommand = 'node src/extract-courses.js -o build/courses.json';
 if (opts['use-cached']) {
     gulp.task('scrape-courses', function() {
         // no-op since we're using cached courses
@@ -87,7 +84,11 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
           number = number.replace(' ', '');
           classNumberToClass[number] = datum;
       });
-
+      fs.readFile('build/subjects.json',function(error,data){
+        if (error){
+          cb(error);
+        } else {
+          var subjects = JSON.parse(data);
       request("https://web.stanford.edu/group/ughb/cgi-bin/handbook/index.php/Computer_Science_Program",
       function(error, response, body) {
           if (error) {
@@ -97,8 +98,7 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
           } else {
 
             var window = jsdom(body).defaultView;
-
-            var subject = 'CS';
+            subjects.forEach(function(subject){
             var courseString = '\\d+[a-zA-Z]?';
             var regexString = subject + '(?:\\s|'+courseString+'|,|;|&)+';
             var regex = new RegExp(regexString, 'g');
@@ -128,9 +128,12 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
                   return frame;
                 },
             });
+          });
             fs.writeFile('./build/shoob.html', window.document.documentElement.outerHTML, cb);
           }
       });
+      }
+    });
     }
   });
 });

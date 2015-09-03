@@ -7,16 +7,6 @@ var request = require('request');
 var main = function() {
     var opts = nomnom()
     .options({
-        file: {
-            abbr: 'f',
-            help: 'parse HTML from an input file',
-            metavar: 'PATH'
-        },
-        url: {
-            abbr: 'u',
-            help: 'parse HTML from a URL',
-            metavar: 'URL'
-        },
         out: {
             abbr: 'o',
             help: 'output to the specified file instead of stdout',
@@ -25,41 +15,52 @@ var main = function() {
     })
     .parse();
 
-    fetchHtmlFromArgs(opts)
-    .then(extractCoursesFromHtml)
-    .then(outputData(opts))
-    .catch(function (error) {
+    var errorHandler = function (error) {
         console.error('Error: ' + error.message);
         console.error('Use --help for usage information');
-    })
-    .done();
+    };
+    fs.readFile('build/subjects.json', function(error, data){
+      if (error){
+        errorHandler(error);
+      } else {
+        var subjects = JSON.parse(data);
+        var promises = [];
+        subjects.forEach(function(subject){
+          var url = 'https://explorecourses.stanford.edu/print'+
+          '?q=' + subject +
+          '&descriptions=on' +
+          '&filter-term-Winter=off'+
+          '&academicYear='+
+          '&filter-term-Summer=off'+
+          '&filter-term-Autumn=off'+
+          '&filter-departmentcode-'+ subject +'=on'+
+          '&filter-term-Spring=off'+
+          '&page=0'+
+          '&filter-coursestatus-Active=on'+
+          '&catalog=';
+          promises.push(
+            fetchHtmlFromUrl(url)
+            .then(extractCoursesFromHtml)
+            .catch(errorHandler)
+          );
+        })
+        Q.all(promises).then(outputData(opts))
+        .catch(errorHandler);
+      }
+    });
 };
 
-var fetchHtmlFromArgs = function(opts) {
+var fetchHtmlFromUrl = function(url) {
     var deferred = Q.defer();
-    if ('file' in opts) {
-        var filename = opts.file;
-        fs.readFile(filename, function(error, text) {
-            if (error) {
-                deferred.reject(new Error(error));
-            } else {
-                deferred.resolve(text.toString());
-            }
-        });
-    } else if ('url' in opts) {
-        var url = opts.url;
-        request(url, function(error, response, body) {
-            if (error) {
-                deferred.reject(error);
-            } else if (response.statusCode !== 200) {
-                deferred.reject(new Error('URL request gave a bad status code: ' + response.statusCode));
-            } else {
-                deferred.resolve(body);
-            }
-        });
-    } else {
-        deferred.reject(new Error('No input source was provided. Please provide a filename or URL.'));
-    }
+    request(url, function(error, response, body) {
+        if (error) {
+            deferred.reject(error);
+        } else if (response.statusCode !== 200) {
+            deferred.reject(new Error('URL request gave a bad status code: ' + response.statusCode));
+        } else {
+            deferred.resolve(body);
+        }
+    });
 
     return deferred.promise;
 };
@@ -114,7 +115,8 @@ var extractCoursesFromHtml = function(rawHtml) {
 var outputData = function(opts) {
     var stream = 'out' in opts ? fs.createWriteStream(opts.out) : process.stdout;
 
-    return function(courses) {
+    return function(arrays) {
+      var courses = [].concat.apply([], arrays);
         console.log('Extracted ' + courses.length + ' courses');
         var jsonString = JSON.stringify(courses, null, 4) + '\n';
         stream.write(jsonString);
