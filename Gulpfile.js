@@ -75,7 +75,6 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
             var subject = 'CS';
             var courseString = '\\d+[a-zA-Z]?';
             var regexString = subject + '(?:\\s|'+courseString+'|,|;|&)+';
-            console.log(regexString);
             var regex = new RegExp(regexString, 'g');
             find(window.document.body, {
                 document: window.document,
@@ -110,19 +109,19 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
   });
 });
 
-gulp.task('vendor-js', function() {
+gulp.task('vendor-js', ['dist-dir'], function() {
     return gulp.src('src/vendor/**/*.js')
     .pipe(concat('vendor.js'))
     .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('css', function() {
+gulp.task('css', ['dist-dir'], function() {
     return gulp.src(['./src/vendor/**/*.css', './src/client/**/*.css'])
     .pipe(concat('styles.css'))
     .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('js', ['inject-class-data'], function() {
+gulp.task('js', ['dist-dir','inject-class-data'], function() {
     return gulp.src('./src/client/main.js')
     .pipe(browserify())
     .pipe(gulp.dest('./dist/'));
