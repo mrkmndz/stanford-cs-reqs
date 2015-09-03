@@ -32,7 +32,7 @@ var main = function() {
         console.error('Error: ' + error.message);
         console.error('Use --help for usage information');
     })
-    .done()
+    .done();
 };
 
 var fetchHtmlFromArgs = function(opts) {
@@ -45,7 +45,7 @@ var fetchHtmlFromArgs = function(opts) {
             } else {
                 deferred.resolve(text.toString());
             }
-        })
+        });
     } else if ('url' in opts) {
         var url = opts.url;
         request(url, function(error, response, body) {
@@ -65,7 +65,7 @@ var fetchHtmlFromArgs = function(opts) {
 };
 
 var extractCoursesFromHtml = function(rawHtml) {
-    const SPLIT_MAP = {
+    var SPLIT_MAP = {
         "Terms": ",",
         "Instructors": ";"
     };
