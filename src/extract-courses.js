@@ -43,7 +43,7 @@ var main = function() {
             .then(extractCoursesFromHtml)
             .catch(errorHandler)
           );
-        })
+        });
         Q.all(promises).then(outputData(opts))
         .catch(errorHandler);
       }

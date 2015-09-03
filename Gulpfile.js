@@ -36,31 +36,9 @@ gulp.task('dist-dir', ['clean-dist'], function(cb) {
     mkdirp('dist', cb);
 });
 
-gulp.task('scrape-subjects',['build-dir'], function(cb){
-  var url = 'https://explorecourses.stanford.edu/';
-  request(url, function(error, response, body) {
-      if (error) {
-          cb(error);
-      } else if (response.statusCode !== 200) {
-          cb(new Error('URL request gave a bad status code: ' + response.statusCode));
-      } else {
-          var window = jsdom(body).defaultView;
-          var regex = /\(([A-Z]*?)\)/g;
-          var subjects = [];
-          find(window.document.body, {
-              document: window.document,
-              find: regex,
-              replace: function(portion, match) {
-                var subject = match[1];
-                if (subject.length!==0){
-                  subjects.push(match[1]);
-                }
-              }
-            });
-            fs.writeFile('./build/subjects.json', JSON.stringify(subjects), cb);
-      }
-  });
-})
+gulp.task('scrape-subjects',['build-dir'],
+  shell.task('node src/extract-subjects.js -o build/subjects.json')
+);
 
 var extractCommand = 'node src/extract-courses.js -o build/courses.json';
 if (opts['use-cached']) {
