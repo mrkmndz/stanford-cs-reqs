@@ -84,10 +84,11 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
                   var frame = window.document.createElement('span');
                   var re = new RegExp(courseString, 'g');
                   var str = portion.text;
-                  console.log(str);
+                  var captured = 0;
                   while ((myArray = re.exec(str)) !== null) {
-                    console.log(myArray[0]);
                     var course = classNumberToClass[subject + myArray[0]];
+                    frame.appendChild(window.document.createTextNode(str.substring(captured,myArray.index)));
+                    captured = myArray.index+myArray[0].length;
                     if (course !== undefined){
                       var wrapper = window.document.createElement('span');
                       wrapper.className = 'course';
@@ -98,6 +99,7 @@ gulp.task('inject-class-data', ['scrape-courses'], function(cb){
                       frame.appendChild(window.document.createTextNode(myArray[0]));
                     }
                   }
+                  frame.appendChild(window.document.createTextNode(str.substring(captured)));
                   return frame;
                 },
             });

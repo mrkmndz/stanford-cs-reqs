@@ -41,7 +41,7 @@ function makeMenu() {
 
     container.classList.add('controls');
     container.style.position = 'fixed';
-    container.style.right = '0';
+    container.style.left = '0';
     container.style.top = '200px';
     container.style.backgroundColor = '#dedede';
     container.style.padding = '10px';
