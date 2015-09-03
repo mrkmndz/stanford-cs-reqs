@@ -1,27 +1,12 @@
-var courseInfo = require('../../build/courses.json');
-
-var subjects = ['CS', 'EE'];
 
 function main() {
     makeMenu();
     var expand = getParameterByName('expand') === 'true';
-    var classNumberToClass = {};
-    courseInfo.forEach(function(datum) {
-        var number = datum.number;
-        // strip out spaces to normalize
-        number = number.replace(' ', '');
-        classNumberToClass[number] = datum;
-    });
+
 
     var courses = document.querySelectorAll('.course');
     Array.prototype.forEach.call(courses, function(courseEl) {
-        var courseNumber = courseEl.innerText;
-        if (courseNumber.indexOf('CS') !== 0) {
-            courseNumber = 'CS' + courseNumber;
-        }
-        courseNumber = courseNumber.replace(' ', '');
-        var course = classNumberToClass[courseNumber];
-        if (course) {
+
             courseEl.classList.add('active');
             var tooltip = new Opentip(courseEl, {
                 target: courseEl,
@@ -30,6 +15,8 @@ function main() {
                 showEffect: '',
                 hideEffect: ''
             });
+
+            var course = JSON.parse(courseEl.dataset.course);
 
             course.Terms.forEach(function(term) {
                 term = term.split(' ').join('-');
@@ -46,7 +33,6 @@ function main() {
             content += '<div class="c-terms">Terms: ' + course.Terms.join(', ') + '</div>';
 
             tooltip.setContent(content);
-        }
     });
 }
 
