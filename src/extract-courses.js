@@ -5,9 +5,6 @@ var nomnom = require('nomnom');
 var http = require("q-io/http");
 
 module.exports = function(subjects) {
-    var errorHandler = function(error){
-      console.error('Error: ' + error.message);
-    };
     var promises = [];
     subjects.forEach(function(subject){
       var url = 'https://explorecourses.stanford.edu/print'+
@@ -25,7 +22,6 @@ module.exports = function(subjects) {
       promises.push(
         http.read(url)
         .then(extractCoursesFromHtml)
-        .catch(errorHandler)
       );
     });
 
@@ -33,7 +29,7 @@ module.exports = function(subjects) {
       var courses = [].concat.apply([], arrays);
       console.log('Extracted ' + courses.length + ' courses');
       return courses;
-    }).catch(errorHandler);
+    });
 };
 
 var extractCoursesFromHtml = function(rawHtml) {

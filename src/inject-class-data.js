@@ -12,11 +12,7 @@ module.exports = function(coursesPath, subjectsPath, programHTML) {
   [fs.read(coursesPath),
     fs.read(subjectsPath),
     http.read(programHTML)],
-  produceHTML)
-  .catch(function (error) {
-      console.error('Error: ' + error.message);
-      console.error('Use --help for usage information');
-  });
+  produceHTML);
 };
 
 var produceHTML = function(coursesJSON,subjectsJSON,syllabusHTML){
