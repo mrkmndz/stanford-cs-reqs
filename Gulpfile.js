@@ -2,15 +2,12 @@ var browserify = require('gulp-browserify');
 var cheerio = require('cheerio');
 var concat = require('gulp-concat');
 var del = require('del');
-var fs = require('fs');
 var gulp = require('gulp');
 var mkdirp = require('mkdirp');
-var nomnom = require('nomnom');
-var shell = require('gulp-shell');
 var jsdom = require('jsdom').jsdom;
 var find = require('../findAndReplaceDOMText/src/findAndReplaceDOMText.js');
-var exec = require('child_process').exec;
 var Q = require('q');
+var fs = require("q-io/fs");
 
 var scrapeSubjects = require('./src/extract-subjects');
 var extractCourses = require('./src/extract-courses');
@@ -22,22 +19,6 @@ gulp.task('clean-build', function(cb) {
 
 gulp.task('build-dir', ['clean-build'], function(cb) {
     mkdirp('build', cb);
-});
-
-
-var FS = require("q-io/fs");
-gulp.task('scrape-courses', ['build-dir'], function(cb){
-  scrapeSubjects('https://explorecourses.stanford.edu/')
-  .then(function(subjects){
-    var writingSubjects = FS.write('./build/subjects.json', JSON.stringify(subjects));
-    var writingCourses = extractCourses(subjects).then(function(courses){
-      var jsonString = JSON.stringify(courses, null, 4) + '\n';
-      return FS.write('./build/courses.json',jsonString);
-    });
-    return Q.all([writingSubjects,writingCourses]);
-  }).then(function(array){
-    cb();
-  }).catch(cb);
 });
 
 gulp.task('clean-dist', function(cb) {
@@ -66,6 +47,20 @@ gulp.task('js', ['dist-dir'], function() {
     .pipe(gulp.dest('./dist/'));
 });
 
+gulp.task('scrape-courses', ['build-dir'], function(cb){
+  scrapeSubjects('https://explorecourses.stanford.edu/')
+  .then(function(subjects){
+    var writingSubjects = fs.write('./build/subjects.json', JSON.stringify(subjects));
+    var writingCourses = extractCourses(subjects).then(function(courses){
+      var jsonString = JSON.stringify(courses, null, 4) + '\n';
+      return fs.write('./build/courses.json',jsonString);
+    });
+    return Q.all([writingSubjects,writingCourses]);
+  }).then(function(array){
+    cb();
+  }).catch(cb);
+});
+
 gulp.task('generate-client', ['dist-dir', 'css', 'js', 'vendor-js'], function(cb) {
   var html = makeDocument('build/courses.json','build/subjects.json','https://web.stanford.edu/group/ughb/cgi-bin/handbook/index.php/Computer_Science_Program');
   html.then(function(rawHTML){
@@ -81,7 +76,7 @@ gulp.task('generate-client', ['dist-dir', 'css', 'js', 'vendor-js'], function(cb
     var body = $('body');
     body.append('<script src="main.js" type="text/javascript"></script>');
 
-    return FS.write('./dist/index.html', $.html());
+    return fs.write('./dist/index.html', $.html());
   }).then(function(write){
     cb();
   }).catch(cb);

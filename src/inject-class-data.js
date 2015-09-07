@@ -3,7 +3,6 @@ var fs = require("q-io/fs");
 var http = require("q-io/http");
 var jsdom = require('jsdom').jsdom;
 var find = require('../../findAndReplaceDOMText/src/findAndReplaceDOMText.js');
-var nomnom = require('nomnom');
 
 var courseString = '\\d+[a-zA-Z]?';
 
