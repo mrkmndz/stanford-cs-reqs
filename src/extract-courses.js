@@ -4,49 +4,35 @@ var fs = require('fs');
 var nomnom = require('nomnom');
 var request = require('request');
 
-var main = function() {
-    var opts = nomnom()
-    .options({
-        out: {
-            abbr: 'o',
-            help: 'output to the specified file instead of stdout',
-            metavar: 'PATH'
-        }
-    })
-    .parse();
+module.exports = function(subjects) {
+    var promises = [];
+    subjects.forEach(function(subject){
+      var url = 'https://explorecourses.stanford.edu/print'+
+      '?q=' + subject +
+      '&descriptions=on' +
+      '&filter-term-Winter=off'+
+      '&academicYear='+
+      '&filter-term-Summer=off'+
+      '&filter-term-Autumn=off'+
+      '&filter-departmentcode-'+ subject +'=on'+
+      '&filter-term-Spring=off'+
+      '&page=0'+
+      '&filter-coursestatus-Active=on'+
+      '&catalog=';
+      promises.push(
+        fetchHtmlFromUrl(url)
+        .then(extractCoursesFromHtml)
+        .catch(errorHandler)
+      );
+    });
 
-    var errorHandler = function (error) {
+    return Q.all(promises).then(function(array){
+      var courses = [].concat.apply([], arrays);
+      console.log('Extracted ' + courses.length + ' courses');
+      return courses;
+    }).catch(function (error) {
         console.error('Error: ' + error.message);
         console.error('Use --help for usage information');
-    };
-    fs.readFile('build/subjects.json', function(error, data){
-      if (error){
-        errorHandler(error);
-      } else {
-        var subjects = JSON.parse(data);
-        var promises = [];
-        subjects.forEach(function(subject){
-          var url = 'https://explorecourses.stanford.edu/print'+
-          '?q=' + subject +
-          '&descriptions=on' +
-          '&filter-term-Winter=off'+
-          '&academicYear='+
-          '&filter-term-Summer=off'+
-          '&filter-term-Autumn=off'+
-          '&filter-departmentcode-'+ subject +'=on'+
-          '&filter-term-Spring=off'+
-          '&page=0'+
-          '&filter-coursestatus-Active=on'+
-          '&catalog=';
-          promises.push(
-            fetchHtmlFromUrl(url)
-            .then(extractCoursesFromHtml)
-            .catch(errorHandler)
-          );
-        });
-        Q.all(promises).then(outputData(opts))
-        .catch(errorHandler);
-      }
     });
 };
 
@@ -110,17 +96,3 @@ var extractCoursesFromHtml = function(rawHtml) {
         });
     }
 };
-
-
-var outputData = function(opts) {
-    var stream = 'out' in opts ? fs.createWriteStream(opts.out) : process.stdout;
-
-    return function(arrays) {
-      var courses = [].concat.apply([], arrays);
-        console.log('Extracted ' + courses.length + ' courses');
-        var jsonString = JSON.stringify(courses, null, 4) + '\n';
-        stream.write(jsonString);
-    };
-};
-
-main();

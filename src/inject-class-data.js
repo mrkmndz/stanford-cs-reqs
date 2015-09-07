@@ -7,44 +7,16 @@ var nomnom = require('nomnom');
 
 var courseString = '\\d+[a-zA-Z]?';
 
-var main = function() {
-    var opts = {};
-  opts = nomnom()
-  .options({
-      out: {
-          abbr: 'o',
-          help: 'output to the specified file instead of stdout',
-          metavar: 'PATH'
-      }
-  })
-  .parse();
-
-  var errorHandler = function (error) {
+module.exports = function(coursesPath, subjectsPath, programHTML) {
+  return Q.spread(
+  [fs.read(coursesPath),
+    fs.read(subjectsPath),
+    http.read(programHTML)],
+  produceHTML)
+  .catch(function (error) {
       console.error('Error: ' + error.message);
       console.error('Use --help for usage information');
-  };
-  var producedHTML = Q.spread(
-  [fs.read('build/courses.json'),
-    fs.read('build/subjects.json'),
-    http.read("https://web.stanford.edu/group/ughb/cgi-bin/handbook/index.php/Computer_Science_Program")],
-  produceHTML);
-  Q.spread([openStream(opts),producedHTML],writeToStream)
-  .catch(errorHandler);
-};
-
-var openStream = function(options){
-  if ('out' in options){
-    return fs.open(options.out,'w');
-  } else {
-    return  Q.fcall(function () {
-      return process.stdout;
-    });
-  }
-};
-
-var writeToStream = function(stream,rawHTML){
-  stream.write(rawHTML);
-  return stream.flush;
+  });
 };
 
 var produceHTML = function(coursesJSON,subjectsJSON,syllabusHTML){
@@ -97,5 +69,3 @@ var wrapNumbersWithCourseSpans = function(doc, subject, classNumberToClass){
     return frame;
   };
 };
-
-main();
