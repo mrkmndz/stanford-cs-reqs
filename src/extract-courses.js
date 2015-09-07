@@ -2,9 +2,12 @@ var Q = require('q');
 var cheerio = require('cheerio');
 var fs = require('fs');
 var nomnom = require('nomnom');
-var request = require('request');
+var http = require("q-io/http");
 
 module.exports = function(subjects) {
+    var errorHandler = function(error){
+      console.error('Error: ' + error.message);
+    };
     var promises = [];
     subjects.forEach(function(subject){
       var url = 'https://explorecourses.stanford.edu/print'+
@@ -20,35 +23,17 @@ module.exports = function(subjects) {
       '&filter-coursestatus-Active=on'+
       '&catalog=';
       promises.push(
-        fetchHtmlFromUrl(url)
+        http.read(url)
         .then(extractCoursesFromHtml)
         .catch(errorHandler)
       );
     });
 
-    return Q.all(promises).then(function(array){
+    return Q.all(promises).then(function(arrays){
       var courses = [].concat.apply([], arrays);
       console.log('Extracted ' + courses.length + ' courses');
       return courses;
-    }).catch(function (error) {
-        console.error('Error: ' + error.message);
-        console.error('Use --help for usage information');
-    });
-};
-
-var fetchHtmlFromUrl = function(url) {
-    var deferred = Q.defer();
-    request(url, function(error, response, body) {
-        if (error) {
-            deferred.reject(error);
-        } else if (response.statusCode !== 200) {
-            deferred.reject(new Error('URL request gave a bad status code: ' + response.statusCode));
-        } else {
-            deferred.resolve(body);
-        }
-    });
-
-    return deferred.promise;
+    }).catch(errorHandler);
 };
 
 var extractCoursesFromHtml = function(rawHtml) {

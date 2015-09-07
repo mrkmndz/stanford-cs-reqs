@@ -7,13 +7,13 @@ var gulp = require('gulp');
 var mkdirp = require('mkdirp');
 var nomnom = require('nomnom');
 var shell = require('gulp-shell');
-var request = require('request');
 var jsdom = require('jsdom').jsdom;
 var find = require('../findAndReplaceDOMText/src/findAndReplaceDOMText.js');
 var exec = require('child_process').exec;
+var Q = require('q');
 
 var scrapeSubjects = require('./src/extract-subjects');
-var extractCourses = require('./src/extract-subjects');
+var extractCourses = require('./src/extract-courses');
 var makeDocument = require('./src/inject-class-data');
 
 gulp.task('clean-build', function(cb) {
@@ -24,13 +24,20 @@ gulp.task('build-dir', ['clean-build'], function(cb) {
     mkdirp('build', cb);
 });
 
-gulp.task('scrape-courses', ['scrape-subjects','build-dir'], function(cb){
-  var subjects = scrapeSubjects('https://explorecourses.stanford.edu/');
-  var courses = extractCourses(subjects);
-  var jsonString = JSON.stringify(courses, null, 4) + '\n';
 
-  fs.writeFile('/build/subjects.json', JSON.stringify(subjects), cb);
-  fs.writeFile('/build/courses.json', jsonString, cb);
+var FS = require("q-io/fs");
+gulp.task('scrape-courses', ['build-dir'], function(cb){
+  scrapeSubjects('https://explorecourses.stanford.edu/')
+  .then(function(subjects){
+    var writingSubjects = FS.write('./build/subjects.json', JSON.stringify(subjects));
+    var writingCourses = extractCourses(subjects).then(function(courses){
+      var jsonString = JSON.stringify(courses, null, 4) + '\n';
+      return FS.write('./build/courses.json',jsonString);
+    });
+    return Q.all([writingSubjects,writingCourses]);
+  }).then(function(array){
+    cb();
+  }).catch(cb);
 });
 
 gulp.task('clean-dist', function(cb) {
@@ -74,10 +81,8 @@ gulp.task('generate-client', ['dist-dir', 'css', 'js', 'vendor-js'], function(cb
     var body = $('body');
     body.append('<script src="main.js" type="text/javascript"></script>');
 
-    fs.writeFile('./dist/index.html', $.html(), cb);
-  }).catch(
-    function(error){
-      console.error('Error: ' + error.message);
-    }
-  );
+    return FS.write('./dist/index.html', $.html());
+  }).then(function(write){
+    cb();
+  }).catch(cb);
 });
