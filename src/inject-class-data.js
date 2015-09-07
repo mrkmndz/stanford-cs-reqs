@@ -7,8 +7,6 @@ var nomnom = require('nomnom');
 
 var courseString = '\\d+[a-zA-Z]?';
 
-  var classNumberToClass = {};
-
 var main = function() {
     var opts = {};
   opts = nomnom()
@@ -25,12 +23,12 @@ var main = function() {
       console.error('Error: ' + error.message);
       console.error('Use --help for usage information');
   };
-  var produceHTML = Q.spread(
+  var producedHTML = Q.spread(
   [fs.read('build/courses.json'),
     fs.read('build/subjects.json'),
     http.read("https://web.stanford.edu/group/ughb/cgi-bin/handbook/index.php/Computer_Science_Program")],
-  handle);
-  Q.spread([openStream(opts),produceHTML],writeToStream)
+  produceHTML);
+  Q.spread([openStream(opts),producedHTML],writeToStream)
   .catch(errorHandler);
 };
 
@@ -49,11 +47,12 @@ var writeToStream = function(stream,rawHTML){
   return stream.flush;
 };
 
-var handle = function(coursesJSON,subjectsJSON,syllabusHTML){
+var produceHTML = function(coursesJSON,subjectsJSON,syllabusHTML){
   var courses = JSON.parse(coursesJSON);
   var subjects = JSON.parse(subjectsJSON);
   var window = jsdom(syllabusHTML).defaultView;
 
+  var classNumberToClass = {};
   courses.forEach(function(datum) {
       var number = datum.number;
       // strip out spaces to normalize
@@ -67,14 +66,14 @@ var handle = function(coursesJSON,subjectsJSON,syllabusHTML){
     find(window.document.body, {
       document: window.document,
       find: regex,
-      replace: injectTags(window.document, subject)
+      replace: wrapNumbersWithCourseSpans(window.document, subject, classNumberToClass)
     });
   });
 
   return window.document.documentElement.outerHTML;
 };
 
-var injectTags = function(doc, subject){
+var wrapNumbersWithCourseSpans = function(doc, subject, classNumberToClass){
   return function(portion,match){
     var frame = doc.createElement('span');
     var re = new RegExp(courseString, 'g');
