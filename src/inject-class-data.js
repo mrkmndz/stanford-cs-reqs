@@ -5,8 +5,13 @@ var jsdom = require('jsdom').jsdom;
 var find = require('../../findAndReplaceDOMText/src/findAndReplaceDOMText.js');
 var nomnom = require('nomnom');
 
+var courseString = '\\d+[a-zA-Z]?';
+
+  var classNumberToClass = {};
+
 var main = function() {
-  var opts = nomnom()
+    var opts = {};
+  opts = nomnom()
   .options({
       out: {
           abbr: 'o',
@@ -20,12 +25,28 @@ var main = function() {
       console.error('Error: ' + error.message);
       console.error('Use --help for usage information');
   };
-
-  Q.spread(
+  var produceHTML = Q.spread(
   [fs.read('build/courses.json'),
     fs.read('build/subjects.json'),
     http.read("https://web.stanford.edu/group/ughb/cgi-bin/handbook/index.php/Computer_Science_Program")],
-  handle).catch(errorHandler);
+  handle);
+  Q.spread([openStream(opts),produceHTML],writeToStream)
+  .catch(errorHandler);
+};
+
+var openStream = function(options){
+  if ('out' in options){
+    return fs.open(options.out,'w');
+  } else {
+    return  Q.fcall(function () {
+      return process.stdout;
+    });
+  }
+};
+
+var writeToStream = function(stream,rawHTML){
+  stream.write(rawHTML);
+  return stream.flush;
 };
 
 var handle = function(coursesJSON,subjectsJSON,syllabusHTML){
@@ -33,7 +54,6 @@ var handle = function(coursesJSON,subjectsJSON,syllabusHTML){
   var subjects = JSON.parse(subjectsJSON);
   var window = jsdom(syllabusHTML).defaultView;
 
-  var classNumberToClass = {};
   courses.forEach(function(datum) {
       var number = datum.number;
       // strip out spaces to normalize
@@ -42,21 +62,19 @@ var handle = function(coursesJSON,subjectsJSON,syllabusHTML){
   });
 
   subjects.forEach(function(subject){
-    var courseString = '\\d+[a-zA-Z]?';
     var regexString = subject + '(?:\\s|'+courseString+'|,|;|&)+';
     var regex = new RegExp(regexString, 'g');
     find(window.document.body, {
       document: window.document,
       find: regex,
-      replace: injectTags(window.document)
+      replace: injectTags(window.document, subject)
     });
   });
-  var stream = 'out' in opts ? fs.createWriteStream(opts.out) : process.stdout;
-  stream.write(window.document.documentElement.outerHTML);
-  console.log("hello?");
+
+  return window.document.documentElement.outerHTML;
 };
 
-var injectTags = function(doc){
+var injectTags = function(doc, subject){
   return function(portion,match){
     var frame = doc.createElement('span');
     var re = new RegExp(courseString, 'g');
